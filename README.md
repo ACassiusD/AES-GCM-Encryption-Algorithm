@@ -1,6 +1,6 @@
 # AES-GCM Encryption Example
 
-I learned this algorithm so I could implement it in a Chrome extension that stores sensitive user data in Chrome local storage. Since a Chrome extension’s source code is public via "Inspect Element" and the stored data is accessible through Chrome's storage API, I needed to find an algorithm that would let me secure this data through encryption. This example demonstrates how to encrypt and decrypt data using AES-GCM combined with a PBKDF2-derived key.
+I learned this algorithm so I could implement it in a future Chrome extension that stores sensitive user data in Chrome local storage. Since a Chrome extension’s source code is public via "Inspect Element" and the stored data is accessible through Chrome's storage API, I needed to find an algorithm that would let me secure this data through encryption. This example demonstrates how to encrypt and decrypt data using AES-GCM combined with a PBKDF2-derived key.
 
 ## Overview
 
