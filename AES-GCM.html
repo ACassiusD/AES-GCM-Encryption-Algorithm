@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>AES-GCM Encryption</title>
+  </head>
+  <body>
+    <h1>AES-GCM Encryption!</h1>
+    <script>  
+
+        const main = async () => {
+            const userPasskey = "GodfreyTheGoodBoy!@#";
+            const diaryEntry = "Dear Diary, I had a great day today. I went to the park and played with my friends. I also had ice cream. It was a great day.";
+            console.log("User Passkey: ", userPasskey);
+            console.log("Diary Entry: ", diaryEntry);
+
+            //Encrypt the Data
+            const {ciphertext, iv, authTag, salt} = await encryptData(diaryEntry, userPasskey);
+
+            //Note - In the database you would store the cipher text, auth tag, iv and salt together
+
+            console.log("Cipher Text: ", ciphertext);
+            console.log("Auth Tag: ", authTag);
+            console.log("IV: ", iv);
+            console.log("Salt: ", salt);
+
+            const decryptedData = await decryptData(ciphertext, userPasskey, authTag, salt, iv);
+
+            console.log("Decrypted Data: ", decryptedData);
+        }
+        
+
+        // Encrypts the users data using AES-GCM encryption algorithm 
+        const encryptData = async (dataToEncrypt, userPassKey) => {
+            //Step 1. Generate Salt
+            const salt = window.crypto.getRandomValues(new Uint8Array(16));
+
+            //Step 2. Get the derived key
+            const derivedKey = await deriveKey(userPassKey, salt);
+
+            //Step 3. Generate an IV
+            const iv = window.crypto.getRandomValues(new Uint8Array(12)); // optimal length for AES-GCM
+
+            //Step 4. Encrypt the data
+            const encryptedData = await window.crypto.subtle.encrypt(
+                {
+                    name: "AES-GCM",
+                    iv: iv
+                },
+                derivedKey,
+                new TextEncoder().encode(dataToEncrypt)
+            );
+
+            //Get cipher text and auth tag
+            const ciphertext = encryptedData.slice(0, encryptedData.byteLength - 16);
+            const authTag = encryptedData.slice(encryptedData.byteLength - 16);
+            
+            return {
+                ciphertext: new Uint8Array(ciphertext),
+                iv,
+                authTag: new Uint8Array(authTag),
+                salt,
+            };
+        }
+
+        const decryptData = async (ciphertext, userPassKey, authTag, salt, iv) => {
+            //Step 1. Get the derived key
+            const derivedKey = await deriveKey(userPassKey, salt);
+
+            //Step 2. re-combine the ciphertext and the authentication tag
+            const encryptedContent = new Uint8Array(ciphertext.length + authTag.length);
+            encryptedContent.set(ciphertext, 0);
+            encryptedContent.set(authTag, ciphertext.length);
+
+            //Step 3. Decode the data
+            const decryptedContent = await window.crypto.subtle.decrypt(
+            { name: "AES-GCM", iv, tagLength: 128 },
+                derivedKey,
+                encryptedContent,
+            );
+ 
+            return decryptedData = new TextDecoder().decode(decryptedContent);
+        }
+
+        const deriveKey = async (userPassKey, salt) => {
+            //Step 1. Prepare passkey for key derivation by converting it into a format suitable for key derivation
+            const baseKey = await window.crypto.subtle.importKey(
+                "raw",
+                new TextEncoder().encode(userPassKey),
+                {name: "PBKDF2"},
+                false,
+                ["deriveKey"]
+            );
+
+            // Step 2. Apply PBKDF2 function to the salt and  to obtain the final encryption key
+            return derivedKey = window.crypto.subtle.deriveKey(
+                {
+                    name: "PBKDF2",
+                    salt: salt,
+                    iterations: 600000,
+                    hash: "SHA-256"
+                },
+                baseKey,
+                {name: "AES-GCM", length: 256},
+                true,
+                ["encrypt", "decrypt"]
+            );
+        }
+
+        main();
+
+    </script>
+  </body>
+</html>
